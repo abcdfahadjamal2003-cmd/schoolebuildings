@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منظومة إدارة الأبنية المدرسية - قمر صناعي</title>
+    <title>منظومة إدارة الأبنية المدرسية - Google Satellite</title>
     
     <!-- PWA / iOS Web App Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -87,8 +87,8 @@
     <!-- الشريط العلوي -->
     <div class="header-panel">
         <div class="header-title">
-            <i class="fa-solid fa-satellite"></i>
-            <span>منظومة الأبنية (قمر صناعي)</span>
+            <i class="fa-solid fa-earth-americas"></i>
+            <span>خرائط جوجل القمر الصناعي</span>
         </div>
         <div class="btn-group">
             <button class="btn btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i> إضافة مدرسة</button>
@@ -151,17 +151,13 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // إعداد الخريطة
-        const map = L.map('map').setView([33.3152, 44.3661], 13); // مركز الخريطة
+        const map = L.map('map').setView([33.3152, 44.3661], 13); // مركز الخريطة الافتراضي
 
-        // 🛰️ طبقة القمر الصناعي عالية الدقة (Esri World Imagery)
-        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 19,
-            attribution: 'Tiles &copy; Esri'
-        }).addTo(map);
-
-        // 🏷️ طبقة الأسماء والشوارع المتقاطعة فوق القمر الصناعي لتسهيل الاستدلال
-        const labelsLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 19
+        // 🗺️ سيرفر خرائط جوجل القمر الصناعي المباشر (Google Hybrid Satellite)
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google Maps'
         }).addTo(map);
 
         let schools = JSON.parse(localStorage.getItem('schools_data')) || [];
@@ -240,7 +236,7 @@
 
         // تحديد الموقع الجغرافي GPS
         function locateUser() {
-            map.locate({setView: true, maxZoom: 17});
+            map.locate({setView: true, maxZoom: 18});
         }
         map.on('locationfound', function(e) {
             L.circle(e.latlng, e.accuracy).addTo(map);
