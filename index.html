@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منظومة إدارة الأبنية المدرسية - Google Satellite</title>
+    <title>منظومة إدارة وإحصاء الأبنية المدرسية - التحديث الهندسي</title>
     
-    <!-- PWA / iOS Web App Tags -->
+    <!-- PWA & Mobile Web App Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="الأبنية المدرسية">
@@ -17,10 +17,12 @@
     
     <style>
         :root {
-            --primary-bg: #0f172a;
-            --card-bg: rgba(15, 23, 42, 0.85);
-            --accent-gold: #f59e0b;
+            --primary-bg: #0b0f19;
+            --card-bg: rgba(15, 23, 42, 0.90);
+            --accent-gold: #fbbf24;
             --accent-blue: #38bdf8;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
             --text-light: #f8fafc;
         }
 
@@ -29,120 +31,221 @@
 
         #map { width: 100%; height: 100vh; z-index: 1; background: #000; }
 
-        /* التحكم العلوي */
+        /* الشريط العلوي للتحكم والبحث */
         .header-panel {
-            position: absolute; top: 15px; right: 15px; left: 15px; z-index: 1000;
-            background: var(--card-bg); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 16px;
-            padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: absolute; top: 12px; right: 12px; left: 12px; z-index: 1000;
+            background: var(--card-bg); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 18px;
+            padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
-        .header-title { font-size: 1.1rem; font-weight: bold; color: var(--accent-gold); display: flex; align-items: center; gap: 8px; }
+        .header-title { font-size: 1.05rem; font-weight: bold; color: var(--accent-gold); display: flex; align-items: center; gap: 8px; }
         
-        .btn-group { display: flex; gap: 8px; }
+        .search-box {
+            display: flex; align-items: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px; padding: 4px 10px; flex: 1; max-width: 280px;
+        }
+        .search-box input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.85rem; padding: 4px; }
+
+        .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn {
-            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
-            color: white; padding: 8px 14px; border-radius: 10px; cursor: pointer;
-            font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 7px 12px; border-radius: 10px; cursor: pointer;
+            font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px;
             transition: all 0.2s ease;
         }
         .btn:active { transform: scale(0.95); }
         .btn-primary { background: var(--accent-blue); color: #000; border: none; }
-        .btn-success { background: #10b981; color: #fff; border: none; }
+        .btn-success { background: var(--accent-green); color: #fff; border: none; }
+        .btn-warning { background: var(--accent-gold); color: #000; border: none; }
 
-        /* نافذة الإضافة المنسدلة */
+        /* نافذة الإدخال الكبيرة */
         .modal {
             display: none; position: fixed; inset: 0; z-index: 2000;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
-            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            align-items: center; justify-content: center; padding: 12px;
         }
         .modal-content {
-            background: #1e293b; width: 100%; max-width: 450px; border-radius: 20px;
-            padding: 20px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            background: #151d2a; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto;
+            border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 25px 50px rgba(0,0,0,0.7);
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 0.8rem; margin-bottom: 4px; color: #94a3b8; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { display: block; font-size: 0.78rem; margin-bottom: 4px; color: #94a3b8; font-weight: 600; }
         .form-control {
-            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155;
-            background: #0f172a; color: white; font-size: 0.9rem; outline: none;
+            width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #334155;
+            background: #0f172a; color: white; font-size: 0.85rem; outline: none;
         }
         .form-control:focus { border-color: var(--accent-blue); }
 
-        /* أدوات الخريطة */
+        .section-tag { font-size: 0.85rem; color: var(--accent-gold); margin: 12px 0 8px 0; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+
+        /* أدوات الخريطة الميدانية */
         .map-tools {
-            position: absolute; bottom: 30px; right: 15px; z-index: 1000;
-            display: flex; flex-direction: column; gap: 10px;
+            position: absolute; bottom: 25px; right: 15px; z-index: 1000;
+            display: flex; flex-direction: column; gap: 8px;
         }
         .tool-btn {
-            width: 45px; height: 45px; border-radius: 50%; background: var(--card-bg);
+            width: 42px; height: 42px; border-radius: 50%; background: var(--card-bg);
             border: 1px solid rgba(255,255,255,0.2); color: white; display: flex;
-            align-items: center; justify-content: center; font-size: 1.2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4); cursor: pointer;
+            align-items: center; justify-content: center; font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer;
         }
+
+        /* شارات التمييز على الخريطة */
+        .status-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-top: 3px;
+        }
+        .badge-caravan { background: #7c3aed; color: #fff; }
+        .badge-danger { background: #dc2626; color: #fff; }
+        .badge-good { background: #059669; color: #fff; }
     </style>
 </head>
 <body>
 
-    <!-- الشريط العلوي -->
+    <!-- الشريط العلوي للتحكم -->
     <div class="header-panel">
         <div class="header-title">
-            <i class="fa-solid fa-earth-americas"></i>
-            <span>خرائط جوجل القمر الصناعي</span>
+            <i class="fa-solid fa-school-flag"></i>
+            <span>منظومة الأبنية المدرسية</span>
         </div>
+
+        <!-- شريط البحث -->
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass" style="color: #94a3b8; font-size: 0.8rem;"></i>
+            <input type="text" id="searchInput" oninput="searchSchools()" placeholder="بحث باسم المدرسة أو المعرف...">
+        </div>
+
+        <!-- أزرار التصفية والإضافة -->
         <div class="btn-group">
-            <button class="btn btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i> إضافة مدرسة</button>
-            <button class="btn btn-success" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> تصدير</button>
+            <button class="btn btn-warning" onclick="filterCaravans()"><i class="fa-solid fa-campground"></i> الكرفانات</button>
+            <button class="btn btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i> إضافة مسح ميداني</button>
+            <button class="btn btn-success" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> تصدير Excel</button>
         </div>
     </div>
 
     <!-- الخريطة -->
     <div id="map"></div>
 
-    <!-- أدوات الخريطة -->
+    <!-- أدوات الجغرافية -->
     <div class="map-tools">
-        <div class="tool-btn" onclick="locateUser()" title="موقعي الحالي"><i class="fa-solid fa-crosshairs"></i></div>
+        <div class="tool-btn" onclick="locateUser()" title="موقعي الميداني"><i class="fa-solid fa-crosshairs"></i></div>
+        <div class="tool-btn" onclick="resetFilter()" title="عرض الكل"><i class="fa-solid fa-rotate"></i></div>
     </div>
 
-    <!-- نافذة إضافة البيانات -->
+    <!-- نافذة الاستبيان الهندسي والميداني الشامل -->
     <div class="modal" id="schoolModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>إضافة مدرسة جديدة</h3>
-                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="closeModal()"></i>
+                <h3 style="color: var(--accent-gold); font-size: 1.1rem;"><i class="fa-solid fa-clipboard-check"></i> استمارة التقييم الهندسي والميداني</h3>
+                <i class="fa-solid fa-xmark" style="cursor:pointer; font-size: 1.2rem;" onclick="closeModal()"></i>
             </div>
+            
             <form id="schoolForm">
-                <div class="form-group">
-                    <label>اسم المدرسة</label>
-                    <input type="text" id="schoolName" class="form-control" required placeholder="مثال: مدرسة الأمل">
+                
+                <!-- البيانات الأساسية -->
+                <div class="section-tag"><i class="fa-solid fa-info-circle"></i> البيانات الأساسية والمعرفية</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>اسم المدرسة الرسمي *</label>
+                        <input type="text" id="schoolName" class="form-control" required placeholder="مثال: ثانوية النواظر">
+                    </div>
+                    <div class="form-group">
+                        <label>الرقم الإحصائي / المعرف</label>
+                        <input type="text" id="schoolCode" class="form-control" placeholder="مثال: 10254">
+                    </div>
+                    <div class="form-group">
+                        <label>المرحلة الدراسية</label>
+                        <select id="schoolType" class="form-control">
+                            <option value="ابتدائية">ابتدائية</option>
+                            <option value="متوسطة">متوسطة</option>
+                            <option value="إعدادية">إعدادية</option>
+                            <option value="ثانوية">ثانوية</option>
+                            <option value="مجمع مدارس">مجمع مدارس</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>نظام الدوام</label>
+                        <select id="shiftType" class="form-control">
+                            <option value="احادي">أحادي (صباحي)</option>
+                            <option value="ثنائي">مزدوج (ثنائي)</option>
+                            <option value="ثلاثي">ثلاثي (اكتظاظ عالٍ)</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>المرحلة الدراسية</label>
-                    <select id="schoolType" class="form-control">
-                        <option value="ابتدائية">ابتدائية</option>
-                        <option value="متوسطة">متوسطة</option>
-                        <option value="إعدادية">إعدادية</option>
-                        <option value="ثانوية">ثانوية</option>
-                    </select>
+
+                <!-- التقييم الإنشائي ونوع البناء -->
+                <div class="section-tag"><i class="fa-solid fa-building"></i> المواصفات الهندسية ونوع البناء</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>نوع هيكل البناء *</label>
+                        <select id="buildingType" class="form-control" onchange="toggleCaravanFields()">
+                            <option value="صبة جاهزة / كونكريت">صبة جاهزة / كونكريت</option>
+                            <option value="كرفاني / سندويش بنل">كرفاني / سندويش بنل</option>
+                            <option value="بناء طيني / قديم">بناء طيني / قديم</option>
+                            <option value="مبنى مؤجر / ضيافة">مبنى مؤجر / ضيافة</option>
+                            <option value="مختلط (ثابت + كرفانات)">مختلط (ثابت + كرفانات)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>حالة السلامة الإنشائية</label>
+                        <select id="structuralStatus" class="form-control">
+                            <option value="ممتازة / جيدة">ممتازة / جيدة</option>
+                            <option value="تحتاج صيانه وترميم">تحتاج صيانة وترميم</option>
+                            <option value="أضرار هيكلية خطرة">أضرار هيكلية خطرة</option>
+                            <option value="آيلة للتقويض والهدم">آيلة للتقويض والهدم</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="caravanCountGroup">
+                        <label>عدد الكرفانات الملحقة</label>
+                        <input type="number" id="caravanCount" class="form-control" value="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>نسبة الأضرار التقديرية (%)</label>
+                        <input type="number" id="damageRatio" class="form-control" min="0" max="100" value="0">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>حالة المبنى</label>
-                    <select id="buildingStatus" class="form-control">
-                        <option value="ممتازة">ممتازة</option>
-                        <option value="جيدة">جيدة</option>
-                        <option value="تحتاج ترميم">تحتاج ترميم</option>
-                        <option value="آيلة للتقويض">آيلة للتقويض</option>
-                    </select>
+
+                <!-- السعة والمساحات -->
+                <div class="section-tag"><i class="fa-solid fa-chart-pie"></i> السعة والمساحات الإجمالية</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>إجمالي عدد الطلاب</label>
+                        <input type="number" id="studentCount" class="form-control" placeholder="مثال: 650">
+                    </div>
+                    <div class="form-group">
+                        <label>عدد الصفوف / القاعات</label>
+                        <input type="number" id="classroomCount" class="form-control" placeholder="مثال: 12">
+                    </div>
+                    <div class="form-group">
+                        <label>مساحة الأرض الكلية (م²)</label>
+                        <input type="number" id="totalArea" class="form-control" placeholder="مثال: 2500">
+                    </div>
+                    <div class="form-group">
+                        <label>مساحة البناء السطحي (م²)</label>
+                        <input type="number" id="builtArea" class="form-control" placeholder="مثال: 800">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>عدد الطلاب</label>
-                    <input type="number" id="studentCount" class="form-control" placeholder="0">
+
+                <!-- الصور والملاحظات -->
+                <div class="section-tag"><i class="fa-solid fa-camera"></i> التوثيق الميداني والملاحظات</div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>إرفاق صورة للمبنى / الموقع الميداني</label>
+                        <input type="file" id="schoolImage" accept="image/*" class="form-control">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>ملاحظات مهندس التقييم الميداني</label>
+                        <textarea id="fieldNotes" class="form-control" rows="2" placeholder="اكتب أي ملاحظات تخص سلامة المبنى أو حاجة المنطقة لتوسعة..."></textarea>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>صورة المبنى المدرسي</label>
-                    <input type="file" id="schoolImage" accept="image/*" class="form-control">
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">حفظ في المنظومة</button>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 15px; padding: 10px; font-size: 0.95rem;">
+                    <i class="fa-solid fa-floppy-disk"></i> حفظ التقرير في المنظومة
+                </button>
             </form>
         </div>
     </div>
@@ -150,39 +253,58 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // إعداد الخريطة
-        const map = L.map('map').setView([33.3152, 44.3661], 13); // مركز الخريطة الافتراضي
+        // 1. إعداد الخريطة
+        const map = L.map('map', { zoomControl: false }).setView([33.3152, 44.3661], 12);
 
-        // 🗺️ سيرفر خرائط جوجل القمر الصناعي المباشر (Google Hybrid Satellite)
-        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+        // 🗺️ خرائط Google Satellite المباشرة عالية الوضوح
+        const googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             attribution: '© Google Maps'
         }).addTo(map);
 
-        let schools = JSON.parse(localStorage.getItem('schools_data')) || [];
+        let schools = JSON.parse(localStorage.getItem('schools_ultra_data')) || [];
+        let markersGroup = L.layerGroup().addTo(map);
         let tempCoords = null;
 
-        // تحميل المدارس المحفوظة
-        function loadSchools() {
-            schools.forEach(school => addMarker(school));
+        // تحميل المدارس
+        function loadSchools(dataToLoad = schools) {
+            markersGroup.clearLayers();
+            dataToLoad.forEach(school => addMarker(school));
         }
 
-        // إضافة مؤشر مدرسة
+        // إضافة مؤشر هندسي على الخريطة
         function addMarker(school) {
-            const marker = L.marker([school.lat, school.lng]).addTo(map);
+            let badgeClass = "badge-good";
+            if (school.buildingType.includes("كرفاني") || school.caravanCount > 0) badgeClass = "badge-caravan";
+            if (school.structuralStatus.includes("آيلة") || school.structuralStatus.includes("أضرار")) badgeClass = "badge-danger";
+
+            const marker = L.marker([school.lat, school.lng]);
+            
             let popupContent = `
-                <div style="direction:rtl; font-size:14px; color:#1e293b;">
-                    <b style="font-size:16px; color:#0f172a;">${school.name}</b><br>
-                    <b>النوع:</b> ${school.type}<br>
-                    <b>حالة المبنى:</b> ${school.status}<br>
-                    <b>عدد الطلاب:</b> ${school.students || 'غير محدد'}<br>
+                <div style="direction:rtl; font-size:13px; color:#1e293b; max-width:260px;">
+                    <b style="font-size:15px; color:#0f172a;">${school.name}</b> 
+                    <span class="status-badge ${badgeClass}">${school.buildingType}</span><br>
+                    <hr style="margin:6px 0; border:0; border-top:1px solid #ccc;">
+                    <b>الرمز الإحصائي:</b> ${school.code || 'غير محدد'}<br>
+                    <b>المرحلة والدوام:</b> ${school.type} (${school.shift})<br>
+                    <b>حالة السلامة:</b> ${school.structuralStatus}<br>
+                    <b>الكرفانات الملحقة:</b> ${school.caravanCount || 0} كرفان<br>
+                    <b>عدد الطلاب / القاعات:</b> ${school.students || 0} طالب / ${school.classrooms || 0} صف<br>
+                    <b>نسبة الأضرار:</b> <span style="color:red; font-weight:bold;">${school.damageRatio || 0}%</span><br>
             `;
-            if (school.image) {
-                popupContent += `<img src="${school.image}" style="width:100%; max-height:120px; border-radius:8px; margin-top:5px; object-fit:cover;">`;
+
+            if (school.notes) {
+                popupContent += `<div style="background:#f1f5f9; padding:5px; border-radius:5px; margin-top:5px; font-size:11px;"><b>ملاحظات:</b> ${school.notes}</div>`;
             }
+
+            if (school.image) {
+                popupContent += `<img src="${school.image}" style="width:100%; max-height:120px; border-radius:8px; margin-top:6px; object-fit:cover;">`;
+            }
+            
             popupContent += `</div>`;
             marker.bindPopup(popupContent);
+            markersGroup.addLayer(marker);
         }
 
         // النقر على الخريطة
@@ -201,25 +323,34 @@
             tempCoords = null;
         }
 
-        // حفظ البيانات
+        // حفظ البيانات في LocalStorage
         document.getElementById('schoolForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const imageInput = document.getElementById('schoolImage');
             
-            const saveSchoolData = (imageData) => {
+            const saveProcess = (imageData) => {
                 const newSchool = {
                     id: Date.now(),
                     name: document.getElementById('schoolName').value,
+                    code: document.getElementById('schoolCode').value,
                     type: document.getElementById('schoolType').value,
-                    status: document.getElementById('buildingStatus').value,
+                    shift: document.getElementById('shiftType').value,
+                    buildingType: document.getElementById('buildingType').value,
+                    structuralStatus: document.getElementById('structuralStatus').value,
+                    caravanCount: document.getElementById('caravanCount').value,
+                    damageRatio: document.getElementById('damageRatio').value,
                     students: document.getElementById('studentCount').value,
+                    classrooms: document.getElementById('classroomCount').value,
+                    totalArea: document.getElementById('totalArea').value,
+                    builtArea: document.getElementById('builtArea').value,
+                    notes: document.getElementById('fieldNotes').value,
                     lat: tempCoords.lat,
                     lng: tempCoords.lng,
                     image: imageData
                 };
 
                 schools.push(newSchool);
-                localStorage.setItem('schools_data', JSON.stringify(schools));
+                localStorage.setItem('schools_ultra_data', JSON.stringify(schools));
                 addMarker(newSchool);
                 closeModal();
                 document.getElementById('schoolForm').reset();
@@ -227,39 +358,60 @@
 
             if (imageInput.files && imageInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) { saveSchoolData(e.target.result); };
+                reader.onload = function(e) { saveProcess(e.target.result); };
                 reader.readAsDataURL(imageInput.files[0]);
             } else {
-                saveSchoolData(null);
+                saveProcess(null);
             }
         });
 
-        // تحديد الموقع الجغرافي GPS
+        // البحث السريع
+        function searchSchools() {
+            const val = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = schools.filter(s => 
+                s.name.toLowerCase().includes(val) || (s.code && s.code.includes(val))
+            );
+            loadSchools(filtered);
+        }
+
+        // تصفية الكرفانات فقط
+        function filterCaravans() {
+            const caravans = schools.filter(s => 
+                s.buildingType.includes("كرفاني") || parseInt(s.caravanCount) > 0
+            );
+            loadSchools(caravans);
+        }
+
+        function resetFilter() {
+            document.getElementById('searchInput').value = '';
+            loadSchools(schools);
+        }
+
+        // تحديد موقع GPS
         function locateUser() {
-            map.locate({setView: true, maxZoom: 18});
+            map.locate({setView: true, maxZoom: 17});
         }
         map.on('locationfound', function(e) {
             L.circle(e.latlng, e.accuracy).addTo(map);
-            L.marker(e.latlng).addTo(map).bindPopup("موقعك الميداني الحالي").openPopup();
+            L.marker(e.latlng).addTo(map).bindPopup("موقع المهندس الميداني").openPopup();
         });
 
-        // تصدير البيانات إلى Excel / CSV
+        // تصدير تقرير شامل إلى Excel / CSV
         function exportToCSV() {
-            if(schools.length === 0) { alert('لا توجد بيانات مدارس لتصديرها!'); return; }
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFFالاسم,النوع,الحالة,عدد الطلاب,خط العرض,خط الطول\n";
+            if(schools.length === 0) { alert('لا توجد بيانات مسجلة للتصدير!'); return; }
+            let csv = "data:text/csv;charset=utf-8,\uFEFFالاسم,الرمز الإحصائي,المرحلة,الدوام,نوع البناء,الحالة الإنشائية,عدد الكرفانات,نسبة الأضرار,الطلاب,الصفوف,المساحة الكلية,ملاحظات,خط العرض,خط الطول\n";
             schools.forEach(s => {
-                csvContent += `"${s.name}","${s.type}","${s.status}","${s.students}","${s.lat}","${s.lng}"\n`;
+                csv += `"${s.name}","${s.code || ''}","${s.type}","${s.shift}","${s.buildingType}","${s.structuralStatus}","${s.caravanCount || 0}","${s.damageRatio || 0}%","${s.students || 0}","${s.classrooms || 0}","${s.totalArea || 0}","${s.notes || ''}","${s.lat}","${s.lng}"\n`;
             });
-            const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "مدارس_المنظومة.csv");
+            link.setAttribute("href", encodeURI(csv));
+            link.setAttribute("download", `تقرير_الأبنية_المدرسية_الميداني.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // تشغيل المنظومة
+        // التشغيل الأولي
         loadSchools();
     </script>
 </body>
