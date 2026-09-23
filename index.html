@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منظومة إدارة وإحصاء الأبنية المدرسية - التحديث الهندسي</title>
+    <title>المنظومة الهندسية المتقدمة لإدارة الأبنية المدرسية (GIS)</title>
     
-    <!-- PWA & Mobile Web App Settings -->
+    <!-- PWA / Web App Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="الأبنية المدرسية">
+    <meta name="apple-mobile-web-app-title" content="منظومة الأبنية">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/167/167707.png">
 
     <!-- Leaflet CSS & FontAwesome -->
@@ -17,35 +17,37 @@
     
     <style>
         :root {
-            --primary-bg: #0b0f19;
-            --card-bg: rgba(15, 23, 42, 0.90);
-            --accent-gold: #fbbf24;
-            --accent-blue: #38bdf8;
-            --accent-red: #ef4444;
-            --accent-green: #10b981;
-            --text-light: #f8fafc;
+            --bg-dark: #090d16;
+            --panel-bg: rgba(15, 23, 42, 0.92);
+            --gold: #f59e0b;
+            --blue: #38bdf8;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+            --green: #10b981;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--primary-bg); color: var(--text-light); }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg-dark); color: var(--text-main); }
 
         #map { width: 100%; height: 100vh; z-index: 1; background: #000; }
 
-        /* الشريط العلوي للتحكم والبحث */
+        /* الشريط العلوي */
         .header-panel {
             position: absolute; top: 12px; right: 12px; left: 12px; z-index: 1000;
-            background: var(--card-bg); backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 18px;
-            padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            background: var(--panel-bg); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 16px;
+            padding: 12px 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.7);
         }
-        .header-title { font-size: 1.05rem; font-weight: bold; color: var(--accent-gold); display: flex; align-items: center; gap: 8px; }
+        .brand { font-size: 1.1rem; font-weight: 800; color: var(--gold); display: flex; align-items: center; gap: 10px; }
         
-        .search-box {
-            display: flex; align-items: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px; padding: 4px 10px; flex: 1; max-width: 280px;
+        .search-container {
+            display: flex; align-items: center; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px; padding: 4px 12px; flex: 1; max-width: 260px;
         }
-        .search-box input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.85rem; padding: 4px; }
+        .search-container input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.85rem; padding: 4px; }
 
         .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn {
@@ -55,196 +57,249 @@
             transition: all 0.2s ease;
         }
         .btn:active { transform: scale(0.95); }
-        .btn-primary { background: var(--accent-blue); color: #000; border: none; }
-        .btn-success { background: var(--accent-green); color: #fff; border: none; }
-        .btn-warning { background: var(--accent-gold); color: #000; border: none; }
+        .btn-primary { background: var(--blue); color: #000; border: none; }
+        .btn-success { background: var(--green); color: #fff; border: none; }
+        .btn-danger { background: var(--red); color: #fff; border: none; }
+        .btn-purple { background: var(--purple); color: #fff; border: none; }
 
-        /* نافذة الإدخال الكبيرة */
+        /* لوحة الإحصائيات الفورية Dashboard */
+        .stats-bar {
+            position: absolute; top: 80px; right: 12px; left: 12px; z-index: 999;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px;
+            pointer-events: none;
+        }
+        .stat-card {
+            background: var(--panel-bg); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+            padding: 8px 12px; text-align: center; pointer-events: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .stat-card .num { font-size: 1.2rem; font-weight: bold; color: var(--gold); }
+        .stat-card .label { font-size: 0.7rem; color: var(--text-sub); }
+
+        /* نافذة التقييم الهندسية المقسمة تبويبياً */
         .modal {
             display: none; position: fixed; inset: 0; z-index: 2000;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
             align-items: center; justify-content: center; padding: 12px;
         }
         .modal-content {
-            background: #151d2a; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto;
-            border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+            background: #111827; width: 100%; max-width: 680px; max-height: 92vh; overflow-y: auto;
+            border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
         
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-        .form-group { margin-bottom: 10px; }
-        .form-group.full-width { grid-column: 1 / -1; }
-        .form-group label { display: block; font-size: 0.78rem; margin-bottom: 4px; color: #94a3b8; font-weight: 600; }
-        .form-control {
-            width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #334155;
-            background: #0f172a; color: white; font-size: 0.85rem; outline: none;
+        /* التبويبات Tabs */
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid #1f2937; padding-bottom: 8px; }
+        .tab-btn {
+            background: transparent; border: none; color: var(--text-sub);
+            padding: 6px 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            border-radius: 8px; transition: 0.2s;
         }
-        .form-control:focus { border-color: var(--accent-blue); }
+        .tab-btn.active { background: var(--blue); color: #000; }
 
-        .section-tag { font-size: 0.85rem; color: var(--accent-gold); margin: 12px 0 8px 0; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        /* أدوات الخريطة الميدانية */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 0.78rem; margin-bottom: 4px; color: var(--text-sub); font-weight: 600; }
+        .form-control {
+            width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #374151;
+            background: #1f2937; color: white; font-size: 0.85rem; outline: none;
+        }
+        .form-control:focus { border-color: var(--blue); }
+
+        /* أدوات التحكم الميداني */
         .map-tools {
             position: absolute; bottom: 25px; right: 15px; z-index: 1000;
             display: flex; flex-direction: column; gap: 8px;
         }
         .tool-btn {
-            width: 42px; height: 42px; border-radius: 50%; background: var(--card-bg);
+            width: 44px; height: 44px; border-radius: 50%; background: var(--panel-bg);
             border: 1px solid rgba(255,255,255,0.2); color: white; display: flex;
             align-items: center; justify-content: center; font-size: 1.1rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5); cursor: pointer;
         }
 
-        /* شارات التمييز على الخريطة */
-        .status-badge {
-            display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-top: 3px;
-        }
-        .badge-caravan { background: #7c3aed; color: #fff; }
-        .badge-danger { background: #dc2626; color: #fff; }
-        .badge-good { background: #059669; color: #fff; }
+        /* شارات التمييز */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+        .badge-danger { background: var(--red); color: white; }
+        .badge-caravan { background: var(--purple); color: white; }
+        .badge-warning { background: var(--gold); color: black; }
+        .badge-success { background: var(--green); color: white; }
     </style>
 </head>
 <body>
 
-    <!-- الشريط العلوي للتحكم -->
+    <!-- الشريط العلوي -->
     <div class="header-panel">
-        <div class="header-title">
-            <i class="fa-solid fa-school-flag"></i>
-            <span>منظومة الأبنية المدرسية</span>
+        <div class="brand">
+            <i class="fa-solid fa-satellite-dish"></i>
+            <span>منظومة الأبنية المدرسية GIS</span>
         </div>
 
-        <!-- شريط البحث -->
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass" style="color: #94a3b8; font-size: 0.8rem;"></i>
-            <input type="text" id="searchInput" oninput="searchSchools()" placeholder="بحث باسم المدرسة أو المعرف...">
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass" style="color: var(--text-sub); font-size: 0.8rem;"></i>
+            <input type="text" id="searchInput" oninput="searchSchools()" placeholder="بحث بالمدرسة أو الرقم المرجعي...">
         </div>
 
-        <!-- أزرار التصفية والإضافة -->
         <div class="btn-group">
-            <button class="btn btn-warning" onclick="filterCaravans()"><i class="fa-solid fa-campground"></i> الكرفانات</button>
-            <button class="btn btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i> إضافة مسح ميداني</button>
-            <button class="btn btn-success" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> تصدير Excel</button>
+            <button class="btn btn-purple" onclick="filterBy('caravan')"><i class="fa-solid fa-campground"></i> الكرفانات</button>
+            <button class="btn btn-danger" onclick="filterBy('danger')"><i class="fa-solid fa-triangle-exclamation"></i> الخطر الإنشائي</button>
+            <button class="btn btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i> تقييم جديد</button>
+            <button class="btn btn-success" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> تصدير التقرير</button>
+        </div>
+    </div>
+
+    <!-- شاشة الإحصائيات الميدانية (Dashboard) -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="num" id="statTotal">0</div>
+            <div class="label">إجمالي المدارس</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="statStudents">0</div>
+            <div class="label">الطاقة الاستيعابية</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" style="color: var(--purple);" id="statCaravans">0</div>
+            <div class="label">مدارس كرفانية</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" style="color: var(--red);" id="statDanger">0</div>
+            <div class="label">مباني متهالكة / آيلة</div>
         </div>
     </div>
 
     <!-- الخريطة -->
     <div id="map"></div>
 
-    <!-- أدوات الجغرافية -->
+    <!-- أدوات الجغرافيا -->
     <div class="map-tools">
-        <div class="tool-btn" onclick="locateUser()" title="موقعي الميداني"><i class="fa-solid fa-crosshairs"></i></div>
-        <div class="tool-btn" onclick="resetFilter()" title="عرض الكل"><i class="fa-solid fa-rotate"></i></div>
+        <div class="tool-btn" onclick="locateUser()" title="موقعي الحقيقي"><i class="fa-solid fa-location-crosshairs"></i></div>
+        <div class="tool-btn" onclick="resetFilter()" title="إعادة تعيين"><i class="fa-solid fa-rotate"></i></div>
     </div>
 
-    <!-- نافذة الاستبيان الهندسي والميداني الشامل -->
+    <!-- النافذة التفاعلية للتقييم والمسح الميداني -->
     <div class="modal" id="schoolModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 style="color: var(--accent-gold); font-size: 1.1rem;"><i class="fa-solid fa-clipboard-check"></i> استمارة التقييم الهندسي والميداني</h3>
+                <h3 style="color: var(--gold); font-size: 1.1rem;"><i class="fa-solid fa-clipboard-list"></i> استمارة المسح الهندسي الشامل</h3>
                 <i class="fa-solid fa-xmark" style="cursor:pointer; font-size: 1.2rem;" onclick="closeModal()"></i>
             </div>
-            
+
+            <!-- أزرار التبويب -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('tab1', this)">1. المعلومات العامة</button>
+                <button class="tab-btn" onclick="switchTab('tab2', this)">2. الهيكل والسلامة</button>
+                <button class="tab-btn" onclick="switchTab('tab3', this)">3. السعة والمساحات</button>
+                <button class="tab-btn" onclick="switchTab('tab4', this)">4. الصور والملاحظات</button>
+            </div>
+
             <form id="schoolForm">
-                
-                <!-- البيانات الأساسية -->
-                <div class="section-tag"><i class="fa-solid fa-info-circle"></i> البيانات الأساسية والمعرفية</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>اسم المدرسة الرسمي *</label>
-                        <input type="text" id="schoolName" class="form-control" required placeholder="مثال: ثانوية النواظر">
-                    </div>
-                    <div class="form-group">
-                        <label>الرقم الإحصائي / المعرف</label>
-                        <input type="text" id="schoolCode" class="form-control" placeholder="مثال: 10254">
-                    </div>
-                    <div class="form-group">
-                        <label>المرحلة الدراسية</label>
-                        <select id="schoolType" class="form-control">
-                            <option value="ابتدائية">ابتدائية</option>
-                            <option value="متوسطة">متوسطة</option>
-                            <option value="إعدادية">إعدادية</option>
-                            <option value="ثانوية">ثانوية</option>
-                            <option value="مجمع مدارس">مجمع مدارس</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>نظام الدوام</label>
-                        <select id="shiftType" class="form-control">
-                            <option value="احادي">أحادي (صباحي)</option>
-                            <option value="ثنائي">مزدوج (ثنائي)</option>
-                            <option value="ثلاثي">ثلاثي (اكتظاظ عالٍ)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- التقييم الإنشائي ونوع البناء -->
-                <div class="section-tag"><i class="fa-solid fa-building"></i> المواصفات الهندسية ونوع البناء</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>نوع هيكل البناء *</label>
-                        <select id="buildingType" class="form-control" onchange="toggleCaravanFields()">
-                            <option value="صبة جاهزة / كونكريت">صبة جاهزة / كونكريت</option>
-                            <option value="كرفاني / سندويش بنل">كرفاني / سندويش بنل</option>
-                            <option value="بناء طيني / قديم">بناء طيني / قديم</option>
-                            <option value="مبنى مؤجر / ضيافة">مبنى مؤجر / ضيافة</option>
-                            <option value="مختلط (ثابت + كرفانات)">مختلط (ثابت + كرفانات)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>حالة السلامة الإنشائية</label>
-                        <select id="structuralStatus" class="form-control">
-                            <option value="ممتازة / جيدة">ممتازة / جيدة</option>
-                            <option value="تحتاج صيانه وترميم">تحتاج صيانة وترميم</option>
-                            <option value="أضرار هيكلية خطرة">أضرار هيكلية خطرة</option>
-                            <option value="آيلة للتقويض والهدم">آيلة للتقويض والهدم</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="caravanCountGroup">
-                        <label>عدد الكرفانات الملحقة</label>
-                        <input type="number" id="caravanCount" class="form-control" value="0" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label>نسبة الأضرار التقديرية (%)</label>
-                        <input type="number" id="damageRatio" class="form-control" min="0" max="100" value="0">
+                <!-- التبويب 1 -->
+                <div id="tab1" class="tab-content active">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>اسم المدرسة *</label>
+                            <input type="text" id="schoolName" class="form-control" required placeholder="اسم المدرسة الرسمي">
+                        </div>
+                        <div class="form-group">
+                            <label>الرمز الإحصائي / المعرف</label>
+                            <input type="text" id="schoolCode" class="form-control" placeholder="مثال: SCH-1092">
+                        </div>
+                        <div class="form-group">
+                            <label>المرحلة الدراسية</label>
+                            <select id="schoolType" class="form-control">
+                                <option value="ابتدائية">ابتدائية</option>
+                                <option value="متوسطة">متوسطة</option>
+                                <option value="إعدادية">إعدادية</option>
+                                <option value="ثانوية">ثانوية</option>
+                                <option value="مجمع مدرسي">مجمع مدرسي</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>نظام الدوام</label>
+                            <select id="shiftType" class="form-control">
+                                <option value="صباحي">صباحي (أحادي)</option>
+                                <option value="مزدوج">مزدوج (ثنائي)</option>
+                                <option value="ثلاثي">ثلاثي (اكتظاظ مرتفع)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <!-- السعة والمساحات -->
-                <div class="section-tag"><i class="fa-solid fa-chart-pie"></i> السعة والمساحات الإجمالية</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>إجمالي عدد الطلاب</label>
-                        <input type="number" id="studentCount" class="form-control" placeholder="مثال: 650">
-                    </div>
-                    <div class="form-group">
-                        <label>عدد الصفوف / القاعات</label>
-                        <input type="number" id="classroomCount" class="form-control" placeholder="مثال: 12">
-                    </div>
-                    <div class="form-group">
-                        <label>مساحة الأرض الكلية (م²)</label>
-                        <input type="number" id="totalArea" class="form-control" placeholder="مثال: 2500">
-                    </div>
-                    <div class="form-group">
-                        <label>مساحة البناء السطحي (م²)</label>
-                        <input type="number" id="builtArea" class="form-control" placeholder="مثال: 800">
+                <!-- التبويب 2 -->
+                <div id="tab2" class="tab-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>نوع الهيكل الإنشائي *</label>
+                            <select id="buildingType" class="form-control">
+                                <option value="صبة جاهزة / كونكريت">صبة جاهزة / كونكريت</option>
+                                <option value="كرفاني / سندويش بنل">كرفاني / سندويش بنل</option>
+                                <option value="طين / بناء قديم">طين / بناء قديم</option>
+                                <option value="مبنى مؤجر">مبنى مؤجر</option>
+                                <option value="مختلط (ثابت + كرفانات)">مختلط (ثابت + كرفانات)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>حالة السلامة الإنشائية</label>
+                            <select id="structuralStatus" class="form-control">
+                                <option value="ممتازة / جيدة">ممتازة / جيدة</option>
+                                <option value="تحتاج صيانة وترميم">تحتاج صيانة وترميم</option>
+                                <option value="أضرار هيكلية خطيرة">أضرار هيكلية خطيرة</option>
+                                <option value="آيلة للتقويض والهدم">آيلة للتقويض والهدم</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>عدد الكرفانات الملحقة</label>
+                            <input type="number" id="caravanCount" class="form-control" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>نسبة الأضرار الهيكلية (%)</label>
+                            <input type="number" id="damageRatio" class="form-control" min="0" max="100" value="0">
+                        </div>
                     </div>
                 </div>
 
-                <!-- الصور والملاحظات -->
-                <div class="section-tag"><i class="fa-solid fa-camera"></i> التوثيق الميداني والملاحظات</div>
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label>إرفاق صورة للمبنى / الموقع الميداني</label>
+                <!-- التبويب 3 -->
+                <div id="tab3" class="tab-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>عدد الطلاب الإجمالي</label>
+                            <input type="number" id="studentCount" class="form-control" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>عدد الصفوف / القاعات</label>
+                            <input type="number" id="classroomCount" class="form-control" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>المساحة الكلية (م²)</label>
+                            <input type="number" id="totalArea" class="form-control" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>مساحة البناء (م²)</label>
+                            <input type="number" id="builtArea" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- التبويب 4 -->
+                <div id="tab4" class="tab-content">
+                    <div class="form-group">
+                        <label>صورة المبنى المدرسي</label>
                         <input type="file" id="schoolImage" accept="image/*" class="form-control">
                     </div>
-                    <div class="form-group full-width">
-                        <label>ملاحظات مهندس التقييم الميداني</label>
-                        <textarea id="fieldNotes" class="form-control" rows="2" placeholder="اكتب أي ملاحظات تخص سلامة المبنى أو حاجة المنطقة لتوسعة..."></textarea>
+                    <div class="form-group">
+                        <label>ملاحظات مهندس المسح الميداني</label>
+                        <textarea id="fieldNotes" class="form-control" rows="3" placeholder="أدخل تفاصيل التقييم أو التوصيات الخاصة بإعادة الإعمار..."></textarea>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 15px; padding: 10px; font-size: 0.95rem;">
-                    <i class="fa-solid fa-floppy-disk"></i> حفظ التقرير في المنظومة
+                    <i class="fa-solid fa-floppy-disk"></i> اعتماد وحفظ التقرير الميداني
                 </button>
             </form>
         </div>
@@ -253,29 +308,53 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. إعداد الخريطة
+        // إعداد الخريطة والتركيز الافتراضي
         const map = L.map('map', { zoomControl: false }).setView([33.3152, 44.3661], 12);
 
-        // 🗺️ خرائط Google Satellite المباشرة عالية الوضوح
-        const googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+        // 🗺️ خرائط Google Satellite المباشرة عالية الدقة
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             attribution: '© Google Maps'
         }).addTo(map);
 
-        let schools = JSON.parse(localStorage.getItem('schools_ultra_data')) || [];
+        let schools = JSON.parse(localStorage.getItem('schools_enterprise_gis')) || [];
         let markersGroup = L.layerGroup().addTo(map);
         let tempCoords = null;
 
-        // تحميل المدارس
+        // تبديل التبويبات
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(tb => tb.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // تحديث الإحصائيات الفورية
+        function updateDashboard(data = schools) {
+            document.getElementById('statTotal').innerText = data.length;
+            
+            const totalStudents = data.reduce((acc, s) => acc + (parseInt(s.students) || 0), 0);
+            document.getElementById('statStudents').innerText = totalStudents.toLocaleString('ar-EG');
+
+            const caravans = data.filter(s => s.buildingType.includes('كرفاني') || parseInt(s.caravanCount) > 0);
+            document.getElementById('statCaravans').innerText = caravans.length;
+
+            const danger = data.filter(s => s.structuralStatus.includes('آيلة') || s.structuralStatus.includes('أضرار'));
+            document.getElementById('statDanger').innerText = danger.length;
+        }
+
+        // تحميل وعرض المؤشرات على الخريطة
         function loadSchools(dataToLoad = schools) {
             markersGroup.clearLayers();
             dataToLoad.forEach(school => addMarker(school));
+            updateDashboard(schools);
         }
 
-        // إضافة مؤشر هندسي على الخريطة
+        // إضافة دبابيس ومؤشرات ملونة ذكية
         function addMarker(school) {
-            let badgeClass = "badge-good";
+            let badgeClass = "badge-success";
+            if (school.structuralStatus.includes("صيانة")) badgeClass = "badge-warning";
             if (school.buildingType.includes("كرفاني") || school.caravanCount > 0) badgeClass = "badge-caravan";
             if (school.structuralStatus.includes("آيلة") || school.structuralStatus.includes("أضرار")) badgeClass = "badge-danger";
 
@@ -284,11 +363,11 @@
             let popupContent = `
                 <div style="direction:rtl; font-size:13px; color:#1e293b; max-width:260px;">
                     <b style="font-size:15px; color:#0f172a;">${school.name}</b> 
-                    <span class="status-badge ${badgeClass}">${school.buildingType}</span><br>
-                    <hr style="margin:6px 0; border:0; border-top:1px solid #ccc;">
-                    <b>الرمز الإحصائي:</b> ${school.code || 'غير محدد'}<br>
+                    <span class="badge ${badgeClass}">${school.buildingType}</span><br>
+                    <hr style="margin:6px 0; border:0; border-top:1px solid #cbd5e1;">
+                    <b>الرمز المرجعي:</b> ${school.code || 'غير محدد'}<br>
                     <b>المرحلة والدوام:</b> ${school.type} (${school.shift})<br>
-                    <b>حالة السلامة:</b> ${school.structuralStatus}<br>
+                    <b>حالة المبنى:</b> ${school.structuralStatus}<br>
                     <b>الكرفانات الملحقة:</b> ${school.caravanCount || 0} كرفان<br>
                     <b>عدد الطلاب / القاعات:</b> ${school.students || 0} طالب / ${school.classrooms || 0} صف<br>
                     <b>نسبة الأضرار:</b> <span style="color:red; font-weight:bold;">${school.damageRatio || 0}%</span><br>
@@ -307,7 +386,7 @@
             markersGroup.addLayer(marker);
         }
 
-        // النقر على الخريطة
+        // تحديد موقع النقر
         map.on('click', function(e) {
             tempCoords = e.latlng;
             openModal();
@@ -323,7 +402,7 @@
             tempCoords = null;
         }
 
-        // حفظ البيانات في LocalStorage
+        // حفظ البيانات
         document.getElementById('schoolForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const imageInput = document.getElementById('schoolImage');
@@ -350,8 +429,9 @@
                 };
 
                 schools.push(newSchool);
-                localStorage.setItem('schools_ultra_data', JSON.stringify(schools));
+                localStorage.setItem('schools_enterprise_gis', JSON.stringify(schools));
                 addMarker(newSchool);
+                updateDashboard(schools);
                 closeModal();
                 document.getElementById('schoolForm').reset();
             };
@@ -365,21 +445,24 @@
             }
         });
 
-        // البحث السريع
+        // البحث الفوري
         function searchSchools() {
             const val = document.getElementById('searchInput').value.toLowerCase();
             const filtered = schools.filter(s => 
-                s.name.toLowerCase().includes(val) || (s.code && s.code.includes(val))
+                s.name.toLowerCase().includes(val) || (s.code && s.code.toLowerCase().includes(val))
             );
             loadSchools(filtered);
         }
 
-        // تصفية الكرفانات فقط
-        function filterCaravans() {
-            const caravans = schools.filter(s => 
-                s.buildingType.includes("كرفاني") || parseInt(s.caravanCount) > 0
-            );
-            loadSchools(caravans);
+        // الفلترة الذكية
+        function filterBy(type) {
+            if (type === 'caravan') {
+                const caravans = schools.filter(s => s.buildingType.includes('كرفاني') || parseInt(s.caravanCount) > 0);
+                loadSchools(caravans);
+            } else if (type === 'danger') {
+                const danger = schools.filter(s => s.structuralStatus.includes('آيلة') || s.structuralStatus.includes('أضرار'));
+                loadSchools(danger);
+            }
         }
 
         function resetFilter() {
@@ -387,31 +470,31 @@
             loadSchools(schools);
         }
 
-        // تحديد موقع GPS
+        // تحديد موقع الجغرافيا الحالية
         function locateUser() {
             map.locate({setView: true, maxZoom: 17});
         }
         map.on('locationfound', function(e) {
             L.circle(e.latlng, e.accuracy).addTo(map);
-            L.marker(e.latlng).addTo(map).bindPopup("موقع المهندس الميداني").openPopup();
+            L.marker(e.latlng).addTo(map).bindPopup("موقع المهندس الميداني الحالي").openPopup();
         });
 
         // تصدير تقرير شامل إلى Excel / CSV
         function exportToCSV() {
-            if(schools.length === 0) { alert('لا توجد بيانات مسجلة للتصدير!'); return; }
-            let csv = "data:text/csv;charset=utf-8,\uFEFFالاسم,الرمز الإحصائي,المرحلة,الدوام,نوع البناء,الحالة الإنشائية,عدد الكرفانات,نسبة الأضرار,الطلاب,الصفوف,المساحة الكلية,ملاحظات,خط العرض,خط الطول\n";
+            if(schools.length === 0) { alert('لا توجد بيانات مسجلة لتصديرها!'); return; }
+            let csv = "data:text/csv;charset=utf-8,\uFEFFاسم المدرسة,الرمز المرجعي,المرحلة,الدوام,نوع الهيكل,الحالة الإنشائية,الكرفانات,نسبة الأضرار,الطلاب,الصفوف,المساحة الإجمالية,ملاحظات المهندس,خط العرض,خط الطول\n";
             schools.forEach(s => {
                 csv += `"${s.name}","${s.code || ''}","${s.type}","${s.shift}","${s.buildingType}","${s.structuralStatus}","${s.caravanCount || 0}","${s.damageRatio || 0}%","${s.students || 0}","${s.classrooms || 0}","${s.totalArea || 0}","${s.notes || ''}","${s.lat}","${s.lng}"\n`;
             });
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI(csv));
-            link.setAttribute("download", `تقرير_الأبنية_المدرسية_الميداني.csv`);
+            link.setAttribute("download", `تقرير_منظومة_الأبنية_المدرسية_GIS.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // التشغيل الأولي
+        // بدء التشغيل
         loadSchools();
     </script>
 </body>
