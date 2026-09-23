@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منظومة إدارة الأبنية المدرسية</title>
+    <title>منظومة إدارة الأبنية المدرسية - قمر صناعي</title>
     
     <!-- PWA / iOS Web App Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,14 +11,14 @@
     <meta name="apple-mobile-web-app-title" content="الأبنية المدرسية">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/167/167707.png">
 
-    <!-- Leaflet CSS (روابط محدثة ومضمونة) & FontAwesome -->
+    <!-- Leaflet CSS & FontAwesome -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
     <style>
         :root {
             --primary-bg: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.9);
+            --card-bg: rgba(15, 23, 42, 0.85);
             --accent-gold: #f59e0b;
             --accent-blue: #38bdf8;
             --text-light: #f8fafc;
@@ -27,21 +27,21 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: var(--primary-bg); color: var(--text-light); }
 
-        #map { width: 100%; height: 100vh; z-index: 1; background: #242f3e; }
+        #map { width: 100%; height: 100vh; z-index: 1; background: #000; }
 
         /* التحكم العلوي */
         .header-panel {
             position: absolute; top: 15px; right: 15px; left: 15px; z-index: 1000;
             background: var(--card-bg); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 16px;
             padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
         .header-title { font-size: 1.1rem; font-weight: bold; color: var(--accent-gold); display: flex; align-items: center; gap: 8px; }
         
         .btn-group { display: flex; gap: 8px; }
         .btn {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
             color: white; padding: 8px 14px; border-radius: 10px; cursor: pointer;
             font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px;
             transition: all 0.2s ease;
@@ -53,12 +53,12 @@
         /* نافذة الإضافة المنسدلة */
         .modal {
             display: none; position: fixed; inset: 0; z-index: 2000;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
             align-items: center; justify-content: center; padding: 20px;
         }
         .modal-content {
             background: #1e293b; width: 100%; max-width: 450px; border-radius: 20px;
-            padding: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            padding: 20px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .form-group { margin-bottom: 12px; }
@@ -78,7 +78,7 @@
             width: 45px; height: 45px; border-radius: 50%; background: var(--card-bg);
             border: 1px solid rgba(255,255,255,0.2); color: white; display: flex;
             align-items: center; justify-content: center; font-size: 1.2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); cursor: pointer;
         }
     </style>
 </head>
@@ -87,8 +87,8 @@
     <!-- الشريط العلوي -->
     <div class="header-panel">
         <div class="header-title">
-            <i class="fa-solid fa-school"></i>
-            <span>منظومة الأبنية المدرسية</span>
+            <i class="fa-solid fa-satellite"></i>
+            <span>منظومة الأبنية (قمر صناعي)</span>
         </div>
         <div class="btn-group">
             <button class="btn btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i> إضافة مدرسة</button>
@@ -147,16 +147,21 @@
         </div>
     </div>
 
-    <!-- Leaflet JS (روابط محدثة ومباشرة) -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // إعداد الخريطة
-        const map = L.map('map').setView([33.3152, 44.3661], 12); // بغداد كمركز
+        const map = L.map('map').setView([33.3152, 44.3661], 13); // مركز الخريطة
 
-        // تحميل طبقة الخريطة عبر OpenStreetMap
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // 🛰️ طبقة القمر الصناعي عالية الدقة (Esri World Imagery)
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: '© OpenStreetMap'
+            attribution: 'Tiles &copy; Esri'
+        }).addTo(map);
+
+        // 🏷️ طبقة الأسماء والشوارع المتقاطعة فوق القمر الصناعي لتسهيل الاستدلال
+        const labelsLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19
         }).addTo(map);
 
         let schools = JSON.parse(localStorage.getItem('schools_data')) || [];
@@ -235,7 +240,7 @@
 
         // تحديد الموقع الجغرافي GPS
         function locateUser() {
-            map.locate({setView: true, maxZoom: 16});
+            map.locate({setView: true, maxZoom: 17});
         }
         map.on('locationfound', function(e) {
             L.circle(e.latlng, e.accuracy).addTo(map);
